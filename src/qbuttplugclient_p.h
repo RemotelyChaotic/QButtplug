@@ -97,6 +97,7 @@ protected:
   QtButtplug::ButtplugProtocolVersion m_iMsgVersionSupported = QtButtplug::AnyProtocolVersion; // all versions supported
   QtButtplug::ConnectionState m_connState = QtButtplug::Disconnected;
   bool m_bIsScanning = false;
+  qint64 m_iMaxPingTime = 10;
 
   QMap<quint32, QButtplugClientDevice> m_devices;
 

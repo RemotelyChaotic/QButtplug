@@ -18,7 +18,8 @@ set(QBP_SRC
   qbuttplugclient_p.h
   qbuttplugclientdevice.cpp
   qbuttplugclientdevice_p.cpp
-  qbuttplugclientdevice_p.h)
+  qbuttplugclientdevice_p.h
+  qbuttplugmessageparsing.cpp)
 
 if (${QBP_BUILD_TYPE} STREQUAL STATIC)
   add_library(${PROJECT_NAME} STATIC ${QBP_SRC})
@@ -55,5 +56,5 @@ install(TARGETS ${PROJECT_NAME}
 install(FILES
   qbuttplugclient.h QButtplugClient
   qbuttplugclientdevice.h QButtplugClientDevice
-  qbuttplugenums.h
+  QButtplugMessageParsing qbuttplugenums.h
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})

@@ -3,6 +3,7 @@
 
 #include "qbuttplug_export.h"
 #include "qbuttplugenums.h"
+#include "qbuttplugmessages.h"
 
 #include <QPointer>
 #include <QStringList>
@@ -13,24 +14,6 @@ QT_BEGIN_NAMESPACE
 
 class QButtplugClientPrivate;
 class QButtplugClientDevicePrivate;
-
-struct ButtplugClientDeviceMessageAttribute
-{
-  // ProtocolV0, ProtocolV1, ProtocolV2, ProtocolV3
-  QString MessageType;
-  // ProtocolV2, ProtocolV3
-  quint32 StepCount = 0;
-  // ProtocolV3
-  QString FeatureDescriptor;
-  // ProtocolV3
-  QString ActuatorType;
-  // ProtocolV3
-  QString SensorType;
-  // ProtocolV3
-  QList<QPair<qint32, qint32>> SensorRange;
-  // ProtocolV3
-  QStringList Endpoints;
-};
 
 class QBUTTPLUG_EXPORT QButtplugClientDevice
 {
