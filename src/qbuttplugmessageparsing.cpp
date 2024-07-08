@@ -1,5 +1,6 @@
 #include "qbuttplugmessageparsing.h"
 
+#include <QDebug>
 #include <QGlobalStatic>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -258,7 +259,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugOk();
-              ret->MessageType = "Ok";
               auto root = sIn.find("Ok");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -289,7 +289,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugError();
-              ret->MessageType = "Error";
               auto root = sIn.find("Error");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -327,7 +326,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugPing();
-              ret->MessageType = "Ping";
               auto root = sIn.find("Ping");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -358,7 +356,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion v) -> ButtplugMessageBase* {
               auto ret = new ButtplugRequestServerInfo();
-              ret->MessageType = "RequestServerInfo";
               auto root = sIn.find("RequestServerInfo");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -412,7 +409,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion v) -> ButtplugMessageBase* {
               auto ret = new ButtplugServerInfo();
-              ret->MessageType = "ServerInfo";
               auto root = sIn.find("ServerInfo");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -488,7 +484,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugStartScanning();
-              ret->MessageType = "StartScanning";
               auto root = sIn.find("StartScanning");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -519,7 +514,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugStopScanning();
-              ret->MessageType = "StopScanning";
               auto root = sIn.find("StopScanning");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -550,7 +544,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugScanningFinished();
-              ret->MessageType = "ScanningFinished";
               auto root = sIn.find("ScanningFinished");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -581,7 +574,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugRequestDeviceList();
-              ret->MessageType = "RequestDeviceList";
               auto root = sIn.find("RequestDeviceList");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -612,7 +604,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion v) -> ButtplugMessageBase* {
               auto ret = new ButtplugDeviceList();
-              ret->MessageType = "DeviceList";
               auto root = sIn.find("DeviceList");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -663,7 +654,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion v) -> ButtplugMessageBase* {
               auto ret = new ButtplugDeviceAdded();
-              ret->MessageType = "DeviceAdded";
               auto root = sIn.find("DeviceAdded");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -697,7 +687,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugDeviceRemoved();
-              ret->MessageType = "DeviceRemoved";
               auto root = sIn.find("DeviceRemoved");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -734,7 +723,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugStopDeviceCmd();
-              ret->MessageType = "StopDeviceCmd";
               auto root = sIn.find("StopDeviceCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -771,7 +759,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugStopAllDevices();
-              ret->MessageType = "StopAllDevices";
               auto root = sIn.find("StopAllDevices");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -802,7 +789,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugScalarCmd();
-              ret->MessageType = "ScalarCmd";
               auto root = sIn.find("ScalarCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -875,7 +861,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugVibrateCmd();
-              ret->MessageType = "VibrateCmd";
               auto root = sIn.find("VibrateCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -942,7 +927,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugSingleMotorVibrateCmd();
-              ret->MessageType = "SingleMotorVibrateCmd";
               auto root = sIn.find("SingleMotorVibrateCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -985,7 +969,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugLinearCmd();
-              ret->MessageType = "LinearCmd";
               auto root = sIn.find("LinearCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1058,7 +1041,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugRotateCmd();
-              ret->MessageType = "RotateCmd";
               auto root = sIn.find("RotateCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1131,7 +1113,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugSensorReadCmd();
-              ret->MessageType = "SensorReadCmd";
               auto root = sIn.find("SensorReadCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1180,7 +1161,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugSensorReading();
-              ret->MessageType = "SensorReading";
               auto root = sIn.find("SensorReading");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1242,7 +1222,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugSensorSubscribeCmd();
-              ret->MessageType = "SensorSubscribeCmd";
               auto root = sIn.find("SensorSubscribeCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1291,7 +1270,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugSensorUnsubscribeCmd();
-              ret->MessageType = "SensorUnsubscribeCmd";
               auto root = sIn.find("SensorUnsubscribeCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1340,7 +1318,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugBatteryLevelCmd();
-              ret->MessageType = "BatteryLevelCmd";
               auto root = sIn.find("BatteryLevelCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1377,7 +1354,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugBatteryLevelReading();
-              ret->MessageType = "BatteryLevelReading";
               auto root = sIn.find("BatteryLevelReading");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1420,7 +1396,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugRSSILevelCmd();
-              ret->MessageType = "RSSILevelCmd";
               auto root = sIn.find("RSSILevelCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1457,7 +1432,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugRSSILevelReading();
-              ret->MessageType = "RSSILevelReading";
               auto root = sIn.find("RSSILevelReading");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1500,7 +1474,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugRawWriteCmd();
-              ret->MessageType = "RawWriteCmd";
               auto root = sIn.find("RawWriteCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1562,7 +1535,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugRawReadCmd();
-              ret->MessageType = "RawReadCmd";
               auto root = sIn.find("RawReadCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1617,7 +1589,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugRawReading();
-              ret->MessageType = "RawReading";
               auto root = sIn.find("RawReading");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1673,7 +1644,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugRawSubscribeCmd();
-              ret->MessageType = "RawSubscribeCmd";
               auto root = sIn.find("RawSubscribeCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1716,7 +1686,6 @@ namespace detail
           QButtplugMessageParser{
             [](const QJsonObject& sIn, QtButtplug::ButtplugProtocolVersion) -> ButtplugMessageBase* {
               auto ret = new ButtplugRawUnsubscribeCmd();
-              ret->MessageType = "RawUnsubscribeCmd";
               auto root = sIn.find("RawUnsubscribeCmd");
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
@@ -1778,3 +1747,71 @@ namespace QtButtplug
     }
   }
 }
+
+//----------------------------------------------------------------------------------------
+//
+QT_BEGIN_NAMESPACE
+
+QButtplugMessageSerializer::QButtplugMessageSerializer()
+{}
+
+//----------------------------------------------------------------------------------------
+//
+void QButtplugMessageSerializer::setProtocolVersion(QtButtplug::ButtplugProtocolVersion v)
+{
+  m_v = v;
+}
+
+//----------------------------------------------------------------------------------------
+//
+QString QButtplugMessageSerializer::Serialize(ButtplugMessageBase* pMsg)
+{
+  auto it = detail::staticRegistry.m_map.find(pMsg->MessageType);
+  if (detail::staticRegistry.m_map.end() != it) {
+    auto obj = it->m_fnToJson(pMsg, m_v);
+    QJsonArray arr;
+    arr.append(obj);
+    QJsonDocument doc(arr);
+    return doc.toJson(QJsonDocument::Compact);
+  }
+  qWarning() << "Unknown buttplug message type.";
+  return QString();
+}
+
+//----------------------------------------------------------------------------------------
+//
+QList<ButtplugMessageBase*> QButtplugMessageSerializer::Deserialize(const QString& sMsg)
+{
+  QList<ButtplugMessageBase*> ret;
+  QJsonDocument doc = QJsonDocument::fromJson(sMsg.toUtf8());
+  if (doc.isArray()) {
+    QJsonArray arr = doc.array();
+    for (qint32 i = 0; arr.count() > i; ++i) {
+      auto it = arr.at(i);
+      if (!it.isObject()) {
+        qWarning() << "QButtplugMessageSerializer: Recieved JSON element is not an object.";
+        continue;
+      }
+
+      auto obj = it.toObject();
+      QStringList vsKeys = obj.keys();
+      if (vsKeys.empty()) {
+        qWarning() << "QButtplugMessageSerializer: No keys found in recieved JSON object.";
+        continue;
+      }
+
+      auto itMap = detail::staticRegistry.m_map.find(vsKeys[0]);
+      if (detail::staticRegistry.m_map.end() == itMap) {
+        qWarning() << "Unknown buttplug message type.";
+      }
+
+      ret << itMap->m_fnFromJson(obj, m_v);
+    }
+    return ret;
+  }
+
+  qWarning() << "QButtplugMessageSerializer: Recieved JSON is malformed.";
+  return {};
+}
+
+QT_END_NAMESPACE

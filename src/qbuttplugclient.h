@@ -5,6 +5,7 @@
 #include "qbuttplugclientdevice.h"
 
 #include <QFlags>
+#include <QAbstractSocket>
 #include <QHostAddress>
 #include <QObject>
 
@@ -27,6 +28,7 @@ public:
   void setProtocolVersion(QtButtplug::ButtplugProtocolVersion iVersion = QtButtplug::AnyProtocolVersion);
 
   QString clientName() const;
+  QString serverName() const;
   QHostAddress address() const;
   qint16 port() const;
   QtButtplug::ButtplugProtocolVersion messageVersionUsed() const;
@@ -48,9 +50,9 @@ public:
   static QString errorString(QtButtplug::Error error);
 
 public slots:
-  void connect();
-  void connect(const QHostAddress& sAddr, qint16 iPort = 12345);
-  void disconnect();
+  void connectToHost();
+  void connectToHost(const QHostAddress& sAddr, qint16 iPort = 12345);
+  void disconnectFromHost();
   void startScan();
   void stopScan();
 

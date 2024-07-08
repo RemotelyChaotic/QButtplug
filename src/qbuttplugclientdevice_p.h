@@ -16,10 +16,16 @@ class QButtplugClientDevicePrivate : public QObject
   friend class QButtplugClientDevice;
 
 public:
-  QButtplugClientDevicePrivate(QButtplugClientPrivate* const pParent) :
+  QButtplugClientDevicePrivate(QButtplugClientPrivate* const pParent,
+                               const ButtplugDevice* const pMsg) :
     QObject(pParent),
     m_pParent(pParent)
   {
+    m_iId = pMsg->DeviceIndex;
+    m_sName = pMsg->DeviceName;
+    m_sDisplayName = pMsg->DeviceDisplayName;
+    m_iTimingGap = pMsg->DeviceMessageTimingGap;
+    m_messages = pMsg->DeviceMessages;
   }
   ~QButtplugClientDevicePrivate()
   {

@@ -62,15 +62,18 @@ public:
   void setSensorReadingCallback(std::function<void(qint32 /*iSensorIndex*/, QList<int> /*data*/)> fn);
 
 protected:
-  QButtplugClientDevice(QButtplugClientPrivate* pParent);
+  QButtplugClientDevice(QButtplugClientPrivate* pParent, const ButtplugDevice* const pMsg);
+
+  void reset();
+
+  std::function<void(qint32 /*iSensorIndex*/, QList<int> /*data*/)> m_fnCallback;
 
 private:
   QButtplugClientDevicePrivate* d_func();
   const QButtplugClientDevicePrivate* d_func() const;
 
-  friend class QButtplugClient;
+  friend class QButtplugClientPrivate;
   QPointer<QButtplugClientDevicePrivate> d_ptr;
-  std::function<void(qint32 /*iSensorIndex*/, QList<int> /*data*/)> m_fnCallback;
 };
 
 QT_END_NAMESPACE

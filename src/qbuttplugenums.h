@@ -34,7 +34,9 @@ namespace QtButtplug
     ERROR_PING = 2, // A ping was not sent in the expected time.
     ERROR_MSG = 3, // A message parsing or permission error occurred.
     ERROR_DEVICE = 4, // A command sent to a device returned an error.
-    ERROR_PING_TIMEOUT = 0xff // Ping timeout
+    ERROR_PING_TIMEOUT = 0xff, // Ping timeout
+    ERROR_SOCKET_ERR,  // Socket error.
+    ERROR_TIMEOUT // Respoonse timeout.
   };
 }
 

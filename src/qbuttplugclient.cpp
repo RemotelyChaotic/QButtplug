@@ -1,11 +1,17 @@
 #include "qbuttplugclient.h"
 #include "qbuttplugclient_p.h"
+#include "qbuttplugmessageparsing.h"
 
 QButtplugClient::QButtplugClient(QObject* pParent) :
   QObject(pParent),
   d_ptr(new QButtplugClientPrivate(this))
 {
-
+  QObject::connect(d_ptr, &QButtplugClientPrivate::connected, this, &QButtplugClient::connected);
+  QObject::connect(d_ptr, &QButtplugClientPrivate::disconnected, this, &QButtplugClient::disconnected);
+  QObject::connect(d_ptr, &QButtplugClientPrivate::deviceAdded, this, &QButtplugClient::deviceAdded);
+  QObject::connect(d_ptr, &QButtplugClientPrivate::deviceRemoved, this, &QButtplugClient::deviceRemoved);
+  QObject::connect(d_ptr, &QButtplugClientPrivate::scanningFinished, this, &QButtplugClient::scanningFinished);
+  QObject::connect(d_ptr, &QButtplugClientPrivate::errorRecieved, this, &QButtplugClient::errorRecieved);
 }
 QButtplugClient::~QButtplugClient()
 {
@@ -56,6 +62,14 @@ QString QButtplugClient::clientName() const
 
 //----------------------------------------------------------------------------------------
 //
+QString QButtplugClient::serverName() const
+{
+  const Q_D(QButtplugClient);
+  return d->m_sServerName;
+}
+
+//----------------------------------------------------------------------------------------
+//
 QHostAddress QButtplugClient::address() const
 {
   const Q_D(QButtplugClient);
@@ -94,7 +108,6 @@ QtButtplug::ConnectionState QButtplugClient::connectionState() const
   return d->m_connState;
 }
 
-
 //----------------------------------------------------------------------------------------
 //
 bool QButtplugClient::isScanning() const
@@ -105,23 +118,29 @@ bool QButtplugClient::isScanning() const
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClient::connect()
+void QButtplugClient::connectToHost()
 {
   Q_D(QButtplugClient);
-  connect(d->m_hostAddr, d->m_iPort);
+  connectToHost(d->m_hostAddr, d->m_iPort);
 }
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClient::connect(const QHostAddress& sAddr, qint16 iPort)
+void QButtplugClient::connectToHost(const QHostAddress& sAddr, qint16 iPort)
 {
   Q_D(QButtplugClient);
-  d->connect(sAddr, iPort);
+  if (QtButtplug::ConnectionState::Disconnected != d->m_connState)
+    return;
+
+  d->m_connState = QtButtplug::ConnectionState::Connecting;
+  d->m_iMsgVersionUsed = d->m_iMsgVersionSupported;
+  d->m_pMsgSerializer->setProtocolVersion(d->m_iMsgVersionUsed);
+  d->connectToHost(sAddr, iPort);
 }
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClient::disconnect()
+void QButtplugClient::disconnectFromHost()
 {
   Q_D(QButtplugClient);
   d->disconnect();
@@ -147,14 +166,16 @@ void QButtplugClient::stopScan()
 //
 bool QButtplugClient::waitConnected(qint64 iTimeoutMs)
 {
-  return false;
+  Q_D(QButtplugClient);
+  return d->waitConnected(iTimeoutMs);
 }
 
 //----------------------------------------------------------------------------------------
 //
 bool QButtplugClient::waitDisconnected(qint64 iTimeoutMs)
 {
-  return false;
+  Q_D(QButtplugClient);
+  return d->waitConnected(iTimeoutMs);
 }
 
 //----------------------------------------------------------------------------------------
@@ -209,32 +230,44 @@ QtButtplug::Error QButtplugClient::error() const
 
 //----------------------------------------------------------------------------------------
 //
+QString q_errorString(QtButtplug::Error error, const QString errorString)
+{
+  switch (error)
+  {
+    case QtButtplug::ERROR_OK:
+      return QObject::tr("No Error.") + errorString;
+    case QtButtplug::ERROR_UNKNOWN:
+      return QObject::tr("An unknown error occurred.") + errorString;
+    case QtButtplug::ERROR_INIT:
+      return QObject::tr("Handshake did not succeed.") + errorString;
+    case QtButtplug::ERROR_PING:
+      return QObject::tr("A ping was not sent in the expected time.") + errorString;
+    case QtButtplug::ERROR_MSG:
+      return QObject::tr("A message parsing or permission error occurred.") + errorString;
+    case QtButtplug::ERROR_DEVICE:
+      return QObject::tr("A command sent to a device returned an error.") + errorString;
+    case QtButtplug::ERROR_PING_TIMEOUT:
+      return QObject::tr("Ping timeout.") + errorString;
+    case QtButtplug::ERROR_SOCKET_ERR:
+      return QObject::tr("Socket error occured.") + errorString;
+    case QtButtplug::ERROR_TIMEOUT:
+      return QObject::tr("Timeout while waiting for message.") + errorString;
+  }
+  return QObject::tr("No Error.");
+}
+
+//----------------------------------------------------------------------------------------
+//
 QString QButtplugClient::errorString() const
 {
   const Q_D(QButtplugClient);
-  return errorString(d->m_error);
+  QMutexLocker l(&d->m_errMut);
+  return q_errorString(d->m_error, d->m_errorDetailString);
 }
 
 //----------------------------------------------------------------------------------------
 //
 QString QButtplugClient::errorString(QtButtplug::Error error)
 {
-  switch (error)
-  {
-    case QtButtplug::ERROR_OK:
-      return tr("No Error.");
-    case QtButtplug::ERROR_UNKNOWN:
-      return tr("An unknown error occurred.");
-    case QtButtplug::ERROR_INIT:
-      return tr("Handshake did not succeed.");
-    case QtButtplug::ERROR_PING:
-      return tr("A ping was not sent in the expected time.");
-    case QtButtplug::ERROR_MSG:
-      return tr("A message parsing or permission error occurred.");
-    case QtButtplug::ERROR_DEVICE:
-      return tr("A command sent to a device returned an error.");
-    case QtButtplug::ERROR_PING_TIMEOUT:
-      return tr("Ping timeout.");
-  }
-  return tr("No Error.");
+  return q_errorString(error, QString());
 }

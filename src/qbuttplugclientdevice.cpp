@@ -6,8 +6,9 @@ QButtplugClientDevice::QButtplugClientDevice() :
 {
 }
 
-QButtplugClientDevice::QButtplugClientDevice(QButtplugClientPrivate* pParent) :
-  d_ptr(new QButtplugClientDevicePrivate(pParent))
+QButtplugClientDevice::QButtplugClientDevice(QButtplugClientPrivate* pParent,
+                                             const ButtplugDevice* const pMsg) :
+  d_ptr(new QButtplugClientDevicePrivate(pParent, pMsg))
 {
 }
 
@@ -243,6 +244,13 @@ QtButtplug::Error QButtplugClientDevice::sendSensorUnsubscribeCmd(qint32 sensorI
 void QButtplugClientDevice::setSensorReadingCallback(std::function<void(qint32 /*iSensorIndex*/, QList<int> /*data*/)> fn)
 {
   m_fnCallback = fn;
+}
+
+//----------------------------------------------------------------------------------------
+//
+void QButtplugClientDevice::reset()
+{
+  delete d_ptr;
 }
 
 //----------------------------------------------------------------------------------------
