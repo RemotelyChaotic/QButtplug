@@ -36,7 +36,8 @@ namespace QtButtplug
     ERROR_DEVICE = 4, // A command sent to a device returned an error.
     ERROR_PING_TIMEOUT = 0xff, // Ping timeout
     ERROR_SOCKET_ERR,  // Socket error.
-    ERROR_TIMEOUT // Respoonse timeout.
+    ERROR_TIMEOUT, // Respoonse timeout.
+    ERROR_NOT_SUPPORTED // Feature is not supported by the current server or client.
   };
 }
 

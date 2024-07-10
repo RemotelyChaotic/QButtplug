@@ -10,8 +10,8 @@
 namespace QtButtplug
 {
   void qRegisterMssageParser(const QString& sMsg,
-                             std::function<ButtplugMessageBase*(const QJsonObject&, QtButtplug::ButtplugProtocolVersion)> fnFromJson,
-                             std::function<QJsonObject(ButtplugMessageBase*, QtButtplug::ButtplugProtocolVersion)> fnToJson);
+                             std::function<QtButtplug::MessageBase*(const QJsonObject&, QtButtplug::ButtplugProtocolVersion)> fnFromJson,
+                             std::function<QJsonObject(QtButtplug::MessageBase*, QtButtplug::ButtplugProtocolVersion)> fnToJson);
 }
 
 QT_BEGIN_NAMESPACE
@@ -23,8 +23,8 @@ public:
 
   void setProtocolVersion(QtButtplug::ButtplugProtocolVersion v);
 
-  QString Serialize(ButtplugMessageBase* pMsg);
-  QList<ButtplugMessageBase*> Deserialize(const QString& sMsg);
+  QString Serialize(QtButtplug::MessageBase* pMsg);
+  QList<QtButtplug::MessageBase*> Deserialize(const QString& sMsg);
 
 private:
   QtButtplug::ButtplugProtocolVersion m_v;

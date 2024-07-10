@@ -7,7 +7,7 @@ QButtplugClientDevice::QButtplugClientDevice() :
 }
 
 QButtplugClientDevice::QButtplugClientDevice(QButtplugClientPrivate* pParent,
-                                             const ButtplugDevice* const pMsg) :
+                                             const QtButtplug::Device* const pMsg) :
   d_ptr(new QButtplugClientDevicePrivate(pParent, pMsg))
 {
 }
@@ -19,6 +19,17 @@ QButtplugClientDevice::QButtplugClientDevice(const QButtplugClientDevice& other)
 
 QButtplugClientDevice::~QButtplugClientDevice()
 {
+  if (isValid()) {
+    Q_D(QButtplugClientDevice);
+    auto itSens = d->m_vSensorCallbacks.find(reinterpret_cast<qint64>(this));
+    if (d->m_vSensorCallbacks.end() != itSens) {
+      d->m_vSensorCallbacks.erase(itSens);
+    }
+    auto itRead = d->m_vRawReadCallbacks.find(reinterpret_cast<qint64>(this));
+    if (d->m_vRawReadCallbacks.end() != itRead) {
+      d->m_vRawReadCallbacks.erase(itRead);
+    }
+  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -73,7 +84,7 @@ QString QButtplugClientDevice::displayName() const
 
 //----------------------------------------------------------------------------------------
 //
-// ProtocolV3
+// ProtocolV3 default otherwise
 qint64 QButtplugClientDevice::timingGap() const
 {
   if (!isValid())
@@ -130,6 +141,22 @@ QList<int> QButtplugClientDevice::readSensor(quint32 sensorIndex, QtButtplug::Er
 
 //----------------------------------------------------------------------------------------
 //
+// ProtocolV2, ProtocolV3, ERROR_NOT_SUPPORTED else
+QByteArray QButtplugClientDevice::sendRawReadCmd(const QString& endpoint, qint64 iExpectedLength,
+                                                 bool bWaitForData, QtButtplug::Error* pErr)
+{
+  if (!isValid()) {
+    if (nullptr != pErr)
+      *pErr = QtButtplug::ERROR_UNKNOWN;
+    return {};
+  }
+
+  Q_D(QButtplugClientDevice);
+  return d->sendRawReadCmd(endpoint, iExpectedLength, bWaitForData, pErr);
+}
+
+//----------------------------------------------------------------------------------------
+//
 QStringList QButtplugClientDevice::supportedMessages() const
 {
   if (!isValid())
@@ -145,7 +172,7 @@ QStringList QButtplugClientDevice::supportedMessages() const
 
 //----------------------------------------------------------------------------------------
 //
-QList<ButtplugClientDeviceMessageAttribute> QButtplugClientDevice::messageAttributes(const QString& sMsg) const
+QList<QtButtplug::ClientDeviceMessageAttribute> QButtplugClientDevice::messageAttributes(const QString& sMsg) const
 {
   if (!isValid())
     return {};
@@ -184,7 +211,7 @@ QtButtplug::Error QButtplugClientDevice::sendScalarCmd(double dValue, qint32 acc
 //----------------------------------------------------------------------------------------
 //
 // noop for ProtocolV0
-QtButtplug::Error QButtplugClientDevice::sendLinearCmd(double dDurationMs, double dPosition, qint32 accuatorIndex)
+QtButtplug::Error QButtplugClientDevice::sendLinearCmd(qint64 dDurationMs, double dPosition, qint32 accuatorIndex)
 {
   if (!isValid())
     return QtButtplug::ERROR_UNKNOWN;
@@ -219,6 +246,50 @@ QtButtplug::Error QButtplugClientDevice::sendVibrateCmd(double dSpeed, qint32 ac
 
 //----------------------------------------------------------------------------------------
 //
+QtButtplug::Error QButtplugClientDevice::sendKiirooCmd(const QString& cmd)
+{
+  if (!isValid())
+    return QtButtplug::ERROR_UNKNOWN;
+
+  Q_D(QButtplugClientDevice);
+  return d->sendKiirooCmd(cmd);
+}
+
+//----------------------------------------------------------------------------------------
+//
+QtButtplug::Error QButtplugClientDevice::sendFleshlightLaunchFW12Cmd(quint32 iPosition, quint32 iSpeed)
+{
+  if (!isValid())
+    return QtButtplug::ERROR_UNKNOWN;
+
+  Q_D(QButtplugClientDevice);
+  return d->sendFleshlightLaunchFW12Cmd(iPosition, iSpeed);
+}
+
+//----------------------------------------------------------------------------------------
+//
+QtButtplug::Error QButtplugClientDevice::sendLovenseCmd(const QString& cmd)
+{
+  if (!isValid())
+    return QtButtplug::ERROR_UNKNOWN;
+
+  Q_D(QButtplugClientDevice);
+  return d->sendLovenseCmd(cmd);
+}
+
+//----------------------------------------------------------------------------------------
+//
+QtButtplug::Error QButtplugClientDevice::sendVorzeA10CycloneCmd(double dSpeed, bool bClockwise)
+{
+  if (!isValid())
+    return QtButtplug::ERROR_UNKNOWN;
+
+  Q_D(QButtplugClientDevice);
+  return d->sendVorzeA10CycloneCmd(dSpeed, bClockwise);
+}
+
+//----------------------------------------------------------------------------------------
+//
 QtButtplug::Error QButtplugClientDevice::sendSensorSubscribeCmd(qint32 sensorIndex)
 {
   if (!isValid())
@@ -241,16 +312,128 @@ QtButtplug::Error QButtplugClientDevice::sendSensorUnsubscribeCmd(qint32 sensorI
 
 //----------------------------------------------------------------------------------------
 //
+// ProtocolV2, ProtocolV3, ERROR_NOT_SUPPORTED else
+QtButtplug::Error QButtplugClientDevice::sendRawWriteCmd(const QString& endpoint,
+                                                         QByteArray data,
+                                                         bool bWriteWithResponse)
+{
+  if (!isValid())
+    return QtButtplug::ERROR_UNKNOWN;
+
+  Q_D(QButtplugClientDevice);
+  return d->sendRawWriteCmd(endpoint, data, bWriteWithResponse);
+}
+
+//----------------------------------------------------------------------------------------
+//
+// ProtocolV2, ProtocolV3, ERROR_NOT_SUPPORTED else
+QtButtplug::Error QButtplugClientDevice::sendRawSubscribeCmd(const QString& endpoint)
+{
+  if (!isValid())
+    return QtButtplug::ERROR_UNKNOWN;
+
+  Q_D(QButtplugClientDevice);
+  return d->sendRawSubscribeCmd(endpoint);
+}
+
+//----------------------------------------------------------------------------------------
+//
+// ProtocolV2, ProtocolV3, ERROR_NOT_SUPPORTED else
+QtButtplug::Error QButtplugClientDevice::sendRawUnsubscribeCmd(const QString& endpoint)
+{
+  if (!isValid())
+    return QtButtplug::ERROR_UNKNOWN;
+
+  Q_D(QButtplugClientDevice);
+  return d->sendRawUnsubscribeCmd(endpoint);
+}
+
+//----------------------------------------------------------------------------------------
+//
 void QButtplugClientDevice::setSensorReadingCallback(std::function<void(qint32 /*iSensorIndex*/, QList<int> /*data*/)> fn)
 {
-  m_fnCallback = fn;
+  if (!isValid())
+    return;
+
+  Q_D(QButtplugClientDevice);
+  d->m_vSensorCallbacks[reinterpret_cast<qint64>(this)] = fn;
+}
+
+//----------------------------------------------------------------------------------------
+//
+void QButtplugClientDevice::setRawReadingCallback(std::function<void(const QString& /*endpoint*/, const QString& /*data*/)> fn)
+{
+  if (!isValid())
+    return;
+
+  Q_D(QButtplugClientDevice);
+  d->m_vRawReadCallbacks[reinterpret_cast<qint64>(this)] = fn;
+}
+
+//----------------------------------------------------------------------------------------
+//
+QtButtplug::Error QButtplugClientDevice::error() const
+{
+  if (!isValid())
+    return QtButtplug::ERROR_UNKNOWN;
+
+  const Q_D(QButtplugClientDevice);
+  return d->m_lastError;
+}
+
+//----------------------------------------------------------------------------------------
+//
+QString QButtplugClientDevice::errorString() const
+{
+  if (!isValid())
+    return QString();
+
+  const Q_D(QButtplugClientDevice);
+  return qt_errorString(d->m_lastError, d->m_errorDetailString);
 }
 
 //----------------------------------------------------------------------------------------
 //
 void QButtplugClientDevice::reset()
 {
-  delete d_ptr;
+  if (isValid()) {
+    Q_D(QButtplugClientDevice);
+    auto itSens = d->m_vSensorCallbacks.find(reinterpret_cast<qint64>(this));
+    if (d->m_vSensorCallbacks.end() != itSens) {
+      d->m_vSensorCallbacks.erase(itSens);
+    }
+    auto itRead = d->m_vRawReadCallbacks.find(reinterpret_cast<qint64>(this));
+    if (d->m_vRawReadCallbacks.end() != itRead) {
+      d->m_vRawReadCallbacks.erase(itRead);
+    }
+    delete d_ptr;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+//
+void QButtplugClientDevice::sensorReadingRecieved(QtButtplug::SensorReading* pMsg)
+{
+  if (!isValid())
+    return;
+
+  const Q_D(QButtplugClientDevice);
+  for (auto it = d->m_vSensorCallbacks.begin(); d->m_vSensorCallbacks.end() != it; ++it) {
+    it->second(pMsg->SensorIndex, pMsg->Data);
+  }
+}
+
+//----------------------------------------------------------------------------------------
+//
+void QButtplugClientDevice::rawReadingRecieved(QtButtplug::RawReading* pMsg)
+{
+  if (!isValid())
+    return;
+
+  const Q_D(QButtplugClientDevice);
+  for (auto it = d->m_vRawReadCallbacks.begin(); d->m_vRawReadCallbacks.end() != it; ++it) {
+    it->second(pMsg->Endpoint, pMsg->Data);
+  }
 }
 
 //----------------------------------------------------------------------------------------

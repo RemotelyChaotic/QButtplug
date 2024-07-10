@@ -56,5 +56,5 @@ install(TARGETS ${PROJECT_NAME}
 install(FILES
   qbuttplugclient.h QButtplugClient
   qbuttplugclientdevice.h QButtplugClientDevice
-  QButtplugMessageParsing qbuttplugenums.h
+  qbuttplugenums.h qbuttplugmessages.h
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})

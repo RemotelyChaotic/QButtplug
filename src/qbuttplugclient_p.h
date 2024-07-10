@@ -4,6 +4,7 @@
 #include "qbuttplugclient.h"
 #include "qbuttplugenums.h"
 
+#include <QEventLoop>
 #include <QObject>
 #include <QMap>
 #include <QMutex>
@@ -53,9 +54,56 @@ inline QString qt_toString(QtButtplug::Error err)
     case QtButtplug::ERROR_SOCKET_ERR:
       return "ERROR_SOCKET_ERR";
     case QtButtplug::ERROR_TIMEOUT:
-      return "ERROR_SOCKET_ERR";
+      return "ERROR_TIMEOUT";
+    case QtButtplug::ERROR_NOT_SUPPORTED:
+      return "ERROR_NOT_SUPPORTED";
   }
   return "";
+}
+
+inline QString qt_errorString(QtButtplug::Error error, const QString errorString)
+{
+  switch (error)
+  {
+    case QtButtplug::ERROR_OK:
+      return QObject::tr("No Error.") + errorString;
+    case QtButtplug::ERROR_UNKNOWN:
+      return QObject::tr("An unknown error occurred.") + errorString;
+    case QtButtplug::ERROR_INIT:
+      return QObject::tr("Handshake did not succeed.") + errorString;
+    case QtButtplug::ERROR_PING:
+      return QObject::tr("A ping was not sent in the expected time.") + errorString;
+    case QtButtplug::ERROR_MSG:
+      return QObject::tr("A message parsing or permission error occurred.") + errorString;
+    case QtButtplug::ERROR_DEVICE:
+      return QObject::tr("A command sent to a device returned an error.") + errorString;
+    case QtButtplug::ERROR_PING_TIMEOUT:
+      return QObject::tr("Ping timeout.") + errorString;
+    case QtButtplug::ERROR_SOCKET_ERR:
+      return QObject::tr("Socket error occured.") + errorString;
+    case QtButtplug::ERROR_TIMEOUT:
+      return QObject::tr("Timeout while waiting for message.") + errorString;
+    case QtButtplug::ERROR_NOT_SUPPORTED:
+      return QObject::tr("ERROR_NOT_SUPPORTED");
+  }
+  return QObject::tr("No Error.");
+}
+
+template <typename Func1>
+bool q_busy_wait(const typename QtPrivate::FunctionPointer<Func1>::Object *sender, Func1 signal,
+                 qint64 iTimeout)
+{
+  bool bTimeout = false;
+  QTimer t;
+  t.setInterval(iTimeout);
+  QEventLoop loop;
+  QObject::connect(&t, &QTimer::timeout, &loop, [&loop, &bTimeout]() {
+    bTimeout = true;
+    loop.quit();
+  });
+  QObject::connect(sender, signal, &loop, &QEventLoop::quit);
+  loop.exec();
+  return !bTimeout;
 }
 
 inline QDebug operator<<(QDebug dbg, const QtButtplug::ConnectionState& message)
@@ -108,6 +156,11 @@ inline bool qt_callInThread(QThread* pThread, std::function<void(void)> fn, bool
   return bOk;
 }
 
+namespace QtButtplug
+{
+  [[maybe_unused]] constexpr qint32 c_iGlobalTimeout = 15000;
+}
+
 //----------------------------------------------------------------------------------------
 //
 QT_BEGIN_NAMESPACE
@@ -156,8 +209,8 @@ protected slots:
   void textMessageRecieved(const QString& sMessage);
 
 protected:
-  bool send(ButtplugMessageBase* pMsg, QStringList vsExpectedResponses,
-            std::function<void(ButtplugMessageBase*)> fnRespHandler = nullptr);
+  bool send(QtButtplug::MessageBase* pMsg, QStringList vsExpectedResponses,
+            std::function<void(QtButtplug::MessageBase*)> fnRespHandler = nullptr);
   qint64 getNextId();
 
   QPointer<QWebSocket> m_pWs;
@@ -187,23 +240,23 @@ private:
   struct ClientPackage
   {
     qint64 m_iId;
-    ButtplugMessageBase* m_pOutMsg;
+    QtButtplug::MessageBase* m_pOutMsg;
     QStringList m_vsExpectedResponses;
-    std::function<void(ButtplugMessageBase*)> m_fnResponseHandler;
+    std::function<void(QtButtplug::MessageBase*)> m_fnResponseHandler;
   };
 
-  std::map<QString, std::function<void(ButtplugMessageBase*)>> m_spontaniousMsgHandlers;
+  std::map<QString, std::function<void(QtButtplug::MessageBase*)>> m_spontaniousMsgHandlers;
   std::vector<ClientPackage> m_clientPackageQueue;
   qint64 m_iLastId = 1;
 
-  void q_handle_scanResponse(ButtplugMessageBase* pMsg, bool bStart);
-  void q_handle_handshake_response(ButtplugMessageBase* pMsg);
-  void q_handle_scanning_finished(ButtplugMessageBase* pMsg);
-  void q_handle_device_list(ButtplugMessageBase* pMsg);
-  void q_handle_device_added(ButtplugMessageBase* pMsg);
-  void q_handle_device_removed(ButtplugMessageBase* pMsg);
-  void q_handle_sensor_reading(ButtplugMessageBase* pMsg);
-  void q_handle_raw_reading(ButtplugMessageBase* pMsg);
+  void q_handle_scanResponse(QtButtplug::MessageBase* pMsg, bool bStart);
+  void q_handle_handshake_response(QtButtplug::MessageBase* pMsg);
+  void q_handle_scanning_finished(QtButtplug::MessageBase* pMsg);
+  void q_handle_device_list(QtButtplug::MessageBase* pMsg);
+  void q_handle_device_added(QtButtplug::MessageBase* pMsg);
+  void q_handle_device_removed(QtButtplug::MessageBase* pMsg);
+  void q_handle_sensor_reading(QtButtplug::MessageBase* pMsg);
+  void q_handle_raw_reading(QtButtplug::MessageBase* pMsg);
   void q_clearQueue();
   void q_setErr(QtButtplug::Error err, const QString& sErr);
   void q_resetErr();

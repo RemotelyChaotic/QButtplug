@@ -225,35 +225,8 @@ QtButtplug::Error QButtplugClient::stopAllDevices()
 QtButtplug::Error QButtplugClient::error() const
 {
   const Q_D(QButtplugClient);
+  QMutexLocker l(&d->m_errMut);
   return d->m_error;
-}
-
-//----------------------------------------------------------------------------------------
-//
-QString q_errorString(QtButtplug::Error error, const QString errorString)
-{
-  switch (error)
-  {
-    case QtButtplug::ERROR_OK:
-      return QObject::tr("No Error.") + errorString;
-    case QtButtplug::ERROR_UNKNOWN:
-      return QObject::tr("An unknown error occurred.") + errorString;
-    case QtButtplug::ERROR_INIT:
-      return QObject::tr("Handshake did not succeed.") + errorString;
-    case QtButtplug::ERROR_PING:
-      return QObject::tr("A ping was not sent in the expected time.") + errorString;
-    case QtButtplug::ERROR_MSG:
-      return QObject::tr("A message parsing or permission error occurred.") + errorString;
-    case QtButtplug::ERROR_DEVICE:
-      return QObject::tr("A command sent to a device returned an error.") + errorString;
-    case QtButtplug::ERROR_PING_TIMEOUT:
-      return QObject::tr("Ping timeout.") + errorString;
-    case QtButtplug::ERROR_SOCKET_ERR:
-      return QObject::tr("Socket error occured.") + errorString;
-    case QtButtplug::ERROR_TIMEOUT:
-      return QObject::tr("Timeout while waiting for message.") + errorString;
-  }
-  return QObject::tr("No Error.");
 }
 
 //----------------------------------------------------------------------------------------
@@ -262,12 +235,12 @@ QString QButtplugClient::errorString() const
 {
   const Q_D(QButtplugClient);
   QMutexLocker l(&d->m_errMut);
-  return q_errorString(d->m_error, d->m_errorDetailString);
+  return qt_errorString(d->m_error, d->m_errorDetailString);
 }
 
 //----------------------------------------------------------------------------------------
 //
 QString QButtplugClient::errorString(QtButtplug::Error error)
 {
-  return q_errorString(error, QString());
+  return qt_errorString(error, QString());
 }

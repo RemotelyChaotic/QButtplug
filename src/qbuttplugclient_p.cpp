@@ -1,7 +1,6 @@
 #include "qbuttplugclient_p.h"
 #include "qbuttplugmessageparsing.h"
 
-#include <QEventLoop>
 #include <QObject>
 #include <QMap>
 #include <QString>
@@ -11,25 +10,7 @@
 namespace
 {
   constexpr qint32 c_iSpontaniousMsgId = 0;
-  constexpr qint32 c_iGlobalTimeout = 15000;
   constexpr qint64 c_iMinPingTimeMs = 10;
-
-  template <typename Func1>
-  bool q_busy_wait(const typename QtPrivate::FunctionPointer<Func1>::Object *sender, Func1 signal,
-                   qint64 iTimeout)
-  {
-    bool bTimeout = false;
-    QTimer t;
-    t.setInterval(iTimeout);
-    QEventLoop loop;
-    QObject::connect(&t, &QTimer::timeout, &loop, [&loop, &bTimeout]() {
-      bTimeout = true;
-      loop.quit();
-    });
-    QObject::connect(sender, signal, &loop, &QEventLoop::quit);
-    loop.exec();
-    return !bTimeout;
-  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -41,12 +22,13 @@ QButtplugClientPrivate::QButtplugClientPrivate(QButtplugClient* const q) :
   m_pMsgSerializer = new QButtplugMessageSerializer;
 
   using namespace std::placeholders;
+  using namespace QtButtplug;
   m_spontaniousMsgHandlers = {
-    { "ScanningFinished", std::bind(&QButtplugClientPrivate::q_handle_scanning_finished, this, _1) },
-    { "DeviceAdded", std::bind(&QButtplugClientPrivate::q_handle_device_added, this, _1) },
-    { "DeviceRemoved", std::bind(&QButtplugClientPrivate::q_handle_device_removed, this, _1) },
-    { "SensorReading", std::bind(&QButtplugClientPrivate::q_handle_sensor_reading, this, _1) },
-    { "RawReading", std::bind(&QButtplugClientPrivate::q_handle_raw_reading, this, _1) }
+    { MessageTypeScanningFinished, std::bind(&QButtplugClientPrivate::q_handle_scanning_finished, this, _1) },
+    { MessageTypeDeviceAdded, std::bind(&QButtplugClientPrivate::q_handle_device_added, this, _1) },
+    { MessageTypeDeviceRemoved, std::bind(&QButtplugClientPrivate::q_handle_device_removed, this, _1) },
+    { MessageTypeSensorReading, std::bind(&QButtplugClientPrivate::q_handle_sensor_reading, this, _1) },
+    { MessageTypeRawReading, std::bind(&QButtplugClientPrivate::q_handle_raw_reading, this, _1) }
   };
 
   m_wsThread.setObjectName("ButtplugWebsocketThread");
@@ -166,10 +148,10 @@ void QButtplugClientPrivate::startScan()
   if (QtButtplug::Connected != m_connState)
     return;
 
-  ButtplugStartScanning* scan = new ButtplugStartScanning;
+  QtButtplug::StartScanning* scan = new QtButtplug::StartScanning;
   scan->Id = getNextId();
 
-  send(scan, QStringList() << "Ok" << "Error",
+  send(scan, QStringList() << QtButtplug::MessageTypeOk << QtButtplug::MessageTypeError,
        std::bind(&QButtplugClientPrivate::q_handle_scanResponse, this,
                  std::placeholders::_1, true));
 }
@@ -181,10 +163,10 @@ void QButtplugClientPrivate::stopScan()
   if (QtButtplug::Connected != m_connState)
     return;
 
-  ButtplugStopScanning* scan = new ButtplugStopScanning;
+  QtButtplug::StopScanning* scan = new QtButtplug::StopScanning;
   scan->Id = getNextId();
 
-  send(scan, QStringList() << "Ok" << "Error",
+  send(scan, QStringList() << QtButtplug::MessageTypeOk << QtButtplug::MessageTypeError,
        std::bind(&QButtplugClientPrivate::q_handle_scanResponse, this,
                  std::placeholders::_1, false));
 }
@@ -196,22 +178,23 @@ QtButtplug::Error QButtplugClientPrivate::stopAllDevices()
   if (QtButtplug::ConnectionState::Connected != m_connState)
     return QtButtplug::Error::ERROR_SOCKET_ERR;
 
-  ButtplugStopAllDevices* stop = new ButtplugStopAllDevices;
+  QtButtplug::StopAllDevices* stop = new QtButtplug::StopAllDevices;
   stop->Id = getNextId();
 
   QtButtplug::Error err = QtButtplug::ERROR_OK;
   QString sError;
-  send(stop, QStringList() << "Ok" << "Error",
-       [this, &err, sError] (ButtplugMessageBase* pMsg) mutable {
-    if ("Error" == pMsg->MessageType) {
-      auto pErr = dynamic_cast<ButtplugError*>(pMsg);
+  send(stop, QStringList() << QtButtplug::MessageTypeOk << QtButtplug::MessageTypeError,
+       [this, &err, sError] (QtButtplug::MessageBase* pMsg) mutable {
+    if (QtButtplug::MessageTypeError == pMsg->MessageType) {
+      auto pErr = dynamic_cast<QtButtplug::ErrorMsg*>(pMsg);
       err = pErr->ErrorCode;
       sError = pErr->ErrorMessage;
     }
     emit q_await_response();
   });
 
-  if (!q_busy_wait(this, &QButtplugClientPrivate::q_await_response, c_iGlobalTimeout)) {
+  if (!q_busy_wait(this, &QButtplugClientPrivate::q_await_response,
+                   QtButtplug::c_iGlobalTimeout)) {
     err = QtButtplug::ERROR_TIMEOUT;
     sError = QString();
   }
@@ -236,9 +219,9 @@ void QButtplugClientPrivate::onDisconnect()
 //
 void QButtplugClientPrivate::pingTimerTimeout()
 {
-  ButtplugPing* ping =  new ButtplugPing;
+  QtButtplug::Ping* ping =  new QtButtplug::Ping;
   ping->Id = getNextId();
-  send(ping, QStringList() << "Ok" << "Error");
+  send(ping, QStringList() << QtButtplug::MessageTypeOk << QtButtplug::MessageTypeError);
 }
 
 //----------------------------------------------------------------------------------------
@@ -264,12 +247,12 @@ void QButtplugClientPrivate::startHandshake()
 {
   m_connState = QtButtplug::ConnectionState::Handshake;
 
-  ButtplugRequestServerInfo* info = new ButtplugRequestServerInfo;
+  QtButtplug::RequestServerInfo* info = new QtButtplug::RequestServerInfo;
   info->Id = getNextId();
   info->ClientName = m_sClientName;
   info->MessageVersion = m_iMsgVersionUsed;
 
-  if (!send(info, QStringList() << "ServerInfo" << "Error",
+  if (!send(info, QStringList() << QtButtplug::MessageTypeServerInfo << QtButtplug::MessageTypeError,
             std::bind(&QButtplugClientPrivate::q_handle_handshake_response, this, std::placeholders::_1))) {
     m_bRunningMsgDiscovery = false;
     m_pWs->abort();
@@ -280,8 +263,8 @@ void QButtplugClientPrivate::startHandshake()
 //
 void QButtplugClientPrivate::textMessageRecieved(const QString& sMessage)
 {
-  QList<ButtplugMessageBase*> vpMsgs = m_pMsgSerializer->Deserialize(sMessage);
-  for (ButtplugMessageBase* pMsg : qAsConst(vpMsgs)) {
+  QList<QtButtplug::MessageBase*> vpMsgs = m_pMsgSerializer->Deserialize(sMessage);
+  for (QtButtplug::MessageBase* pMsg : qAsConst(vpMsgs)) {
 
     if (c_iSpontaniousMsgId == pMsg->Id) {
       // handle spontanious messages
@@ -305,6 +288,8 @@ void QButtplugClientPrivate::textMessageRecieved(const QString& sMessage)
             it->m_fnResponseHandler(pMsg);
           }
 
+          // cleanup
+          delete it->m_pOutMsg;
           it = m_clientPackageQueue.erase(it);
           if (!m_clientPackageQueue.empty())
             --it;
@@ -321,8 +306,8 @@ void QButtplugClientPrivate::textMessageRecieved(const QString& sMessage)
 
 //----------------------------------------------------------------------------------------
 //
-bool QButtplugClientPrivate::send(ButtplugMessageBase* pMsg, QStringList vsExpectedResponses,
-                                  std::function<void(ButtplugMessageBase*)> fnRespHandler)
+bool QButtplugClientPrivate::send(QtButtplug::MessageBase* pMsg, QStringList vsExpectedResponses,
+                                  std::function<void(QtButtplug::MessageBase*)> fnRespHandler)
 {
   m_clientPackageQueue.push_back({pMsg->Id, pMsg, vsExpectedResponses, fnRespHandler});
 
@@ -353,10 +338,10 @@ qint64 QButtplugClientPrivate::getNextId()
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClientPrivate::q_handle_scanResponse(ButtplugMessageBase* pMsg, bool bStart)
+void QButtplugClientPrivate::q_handle_scanResponse(QtButtplug::MessageBase* pMsg, bool bStart)
 {
-  if (pMsg->MessageType == "Error") {
-    auto pMsgErr = dynamic_cast<ButtplugError*>(pMsg);
+  if (pMsg->MessageType == QtButtplug::MessageTypeError) {
+    auto pMsgErr = dynamic_cast<QtButtplug::ErrorMsg*>(pMsg);
     q_setErr(pMsgErr->ErrorCode, pMsgErr->ErrorMessage);
   }
 
@@ -367,10 +352,10 @@ void QButtplugClientPrivate::q_handle_scanResponse(ButtplugMessageBase* pMsg, bo
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClientPrivate::q_handle_handshake_response(ButtplugMessageBase* pMsg)
+void QButtplugClientPrivate::q_handle_handshake_response(QtButtplug::MessageBase* pMsg)
 {
-  if (pMsg->MessageType == "Error") {
-    auto pMsgErr = dynamic_cast<ButtplugError*>(pMsg);
+  if (pMsg->MessageType == QtButtplug::MessageTypeError) {
+    auto pMsgErr = dynamic_cast<QtButtplug::ErrorMsg*>(pMsg);
     if (m_bRunningMsgDiscovery &&
         QtButtplug::AnyProtocolVersion == m_iMsgVersionSupported) {
       if (QtButtplug::ProtocolV0 >= m_iMsgVersionUsed) {
@@ -390,8 +375,8 @@ void QButtplugClientPrivate::q_handle_handshake_response(ButtplugMessageBase* pM
 
   q_resetErr();
 
-  if (pMsg->MessageType == "ServerInfo") {
-    auto pMsgInfo = dynamic_cast<ButtplugServerInfo*>(pMsg);
+  if (pMsg->MessageType == QtButtplug::MessageTypeServerInfo) {
+    auto pMsgInfo = dynamic_cast<QtButtplug::ServerInfo*>(pMsg);
     m_sServerName = pMsgInfo->ServerName;
     m_iMaxPingTime = std::max(c_iMinPingTimeMs, pMsgInfo->MaxPingTime);
 
@@ -408,9 +393,9 @@ void QButtplugClientPrivate::q_handle_handshake_response(ButtplugMessageBase* pM
 
     // can't modify local message queue while working it so queue the device querry instead
     qt_callInThread(this->thread(), [this]() {
-      ButtplugRequestDeviceList* pDevs = new ButtplugRequestDeviceList;
+      QtButtplug::RequestDeviceList* pDevs = new QtButtplug::RequestDeviceList;
       pDevs->Id = getNextId();
-      send(pDevs, QStringList() << "DeviceList" << "Error",
+      send(pDevs, QStringList() << QtButtplug::MessageTypeDeviceList << QtButtplug::MessageTypeError,
            std::bind(&QButtplugClientPrivate::q_handle_device_list, this, std::placeholders::_1));
     });
   }
@@ -418,17 +403,17 @@ void QButtplugClientPrivate::q_handle_handshake_response(ButtplugMessageBase* pM
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClientPrivate::q_handle_scanning_finished(ButtplugMessageBase*)
+void QButtplugClientPrivate::q_handle_scanning_finished(QtButtplug::MessageBase*)
 {
   emit scanningFinished();
 }
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClientPrivate::q_handle_device_list(ButtplugMessageBase* pMsg)
+void QButtplugClientPrivate::q_handle_device_list(QtButtplug::MessageBase* pMsg)
 {
-  auto pMsgDevs = dynamic_cast<ButtplugDeviceList*>(pMsg);
-  for (const ButtplugDevice& dev : qAsConst(pMsgDevs->Devices)) {
+  auto pMsgDevs = dynamic_cast<QtButtplug::DeviceList*>(pMsg);
+  for (const QtButtplug::Device& dev : qAsConst(pMsgDevs->Devices)) {
     if (m_devices.end() == m_devices.find(dev.DeviceIndex)) {
       QButtplugClientDevice device(this, &dev);
       m_devices.insert(dev.DeviceIndex, device);
@@ -439,9 +424,9 @@ void QButtplugClientPrivate::q_handle_device_list(ButtplugMessageBase* pMsg)
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClientPrivate::q_handle_device_added(ButtplugMessageBase* pMsg)
+void QButtplugClientPrivate::q_handle_device_added(QtButtplug::MessageBase* pMsg)
 {
-  auto pMsgAdd = dynamic_cast<ButtplugDeviceAdded*>(pMsg);
+  auto pMsgAdd = dynamic_cast<QtButtplug::DeviceAdded*>(pMsg);
 
   if (m_devices.end() == m_devices.find(pMsgAdd->DeviceIndex)) {
     QButtplugClientDevice dev(this, pMsgAdd);
@@ -452,9 +437,9 @@ void QButtplugClientPrivate::q_handle_device_added(ButtplugMessageBase* pMsg)
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClientPrivate::q_handle_device_removed(ButtplugMessageBase* pMsg)
+void QButtplugClientPrivate::q_handle_device_removed(QtButtplug::MessageBase* pMsg)
 {
-  auto pMsgRem = dynamic_cast<ButtplugDeviceRemoved*>(pMsg);
+  auto pMsgRem = dynamic_cast<QtButtplug::DeviceRemoved*>(pMsg);
   auto it = m_devices.find(pMsgRem->DeviceIndex);
   if (m_devices.end() != it) {
     it->reset();
@@ -465,20 +450,24 @@ void QButtplugClientPrivate::q_handle_device_removed(ButtplugMessageBase* pMsg)
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClientPrivate::q_handle_sensor_reading(ButtplugMessageBase* pMsg)
+void QButtplugClientPrivate::q_handle_sensor_reading(QtButtplug::MessageBase* pMsg)
 {
-  // TODO:
-  auto pMsgRead = dynamic_cast<ButtplugSensorReading*>(pMsg);
-  Q_UNUSED(pMsgRead)
+  auto pMsgRead = dynamic_cast<QtButtplug::SensorReading*>(pMsg);
+  auto it = m_devices.find(pMsgRead->DeviceIndex);
+  if (m_devices.end() != it) {
+    it->sensorReadingRecieved(pMsgRead);
+  }
 }
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClientPrivate::q_handle_raw_reading(ButtplugMessageBase* pMsg)
+void QButtplugClientPrivate::q_handle_raw_reading(QtButtplug::MessageBase* pMsg)
 {
-  // TODO:
-  auto pMsgRead = dynamic_cast<ButtplugRawReading*>(pMsg);
-  Q_UNUSED(pMsgRead)
+  auto pMsgRead = dynamic_cast<QtButtplug::RawReading*>(pMsg);
+  auto it = m_devices.find(pMsgRead->DeviceIndex);
+  if (m_devices.end() != it) {
+    it->rawReadingRecieved(pMsgRead);
+  }
 }
 
 //----------------------------------------------------------------------------------------
