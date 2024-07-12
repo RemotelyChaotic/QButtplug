@@ -36,7 +36,7 @@ QButtplugClientDevice::~QButtplugClientDevice()
 //
 bool QButtplugClientDevice::isValid() const
 {
-  return nullptr == d_ptr;
+  return !isNull();
 }
 
 //----------------------------------------------------------------------------------------
