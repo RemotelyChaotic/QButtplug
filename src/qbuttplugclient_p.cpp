@@ -19,6 +19,9 @@ QButtplugClientPrivate::QButtplugClientPrivate(QButtplugClient* const q) :
   QObject(q),
   q_ptr(q)
 {
+  qRegisterMetaType<QtButtplug::ConnectionState>();
+  qRegisterMetaType<QtButtplug::Error>();
+
   m_pMsgSerializer = new QButtplugMessageSerializer;
 
   using namespace std::placeholders;
@@ -209,10 +212,13 @@ QtButtplug::Error QButtplugClientPrivate::stopAllDevices()
 void QButtplugClientPrivate::onDisconnect()
 {
   m_wsThread.setObjectName("ButtplugWebsocketThread");
-  m_connState = QtButtplug::ConnectionState::Disconnected;
-  if (m_pingTimer.isActive())
-    m_pingTimer.stop();
-  emit disconnected();
+  auto oldConnState = m_connState.load();
+  if (QtButtplug::ConnectionState::Disconnected != oldConnState) {
+    m_connState = QtButtplug::ConnectionState::Disconnected;
+    if (m_pingTimer.isActive())
+      m_pingTimer.stop();
+    emit disconnected();
+  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -221,7 +227,14 @@ void QButtplugClientPrivate::pingTimerTimeout()
 {
   QtButtplug::Ping* ping =  new QtButtplug::Ping;
   ping->Id = getNextId();
-  send(ping, QStringList() << QtButtplug::MessageTypeOk << QtButtplug::MessageTypeError);
+  send(ping, QStringList() << QtButtplug::MessageTypeOk << QtButtplug::MessageTypeError,
+       [this](QtButtplug::MessageBase* pMsg) {
+    if (QtButtplug::MessageTypeError == pMsg->MessageType) {
+      qt_callInThread(&m_wsThread, [this]() {
+          m_pWs->close();
+        });
+    }
+  });
 }
 
 //----------------------------------------------------------------------------------------
@@ -276,7 +289,7 @@ void QButtplugClientPrivate::textMessageRecieved(const QString& sMessage)
 
     else {
       // handle responses
-      for (auto it = m_clientPackageQueue.begin(); m_clientPackageQueue.end() != it; ++it) {
+      for (auto it = m_clientPackageQueue.begin(); m_clientPackageQueue.end() != it;) {
         if (it->m_iId == pMsg->Id) {
           bool bOk = true;
           if (!it->m_vsExpectedResponses.contains(pMsg->MessageType)) {
@@ -291,11 +304,13 @@ void QButtplugClientPrivate::textMessageRecieved(const QString& sMessage)
           // cleanup
           delete it->m_pOutMsg;
           it = m_clientPackageQueue.erase(it);
-          if (!m_clientPackageQueue.empty())
-            --it;
-          else
+          if (!m_clientPackageQueue.empty()) {
+            continue;
+          } else {
             break;
+          }
         }
+        ++it;
       }
     }
 
@@ -378,7 +393,7 @@ void QButtplugClientPrivate::q_handle_handshake_response(QtButtplug::MessageBase
   if (pMsg->MessageType == QtButtplug::MessageTypeServerInfo) {
     auto pMsgInfo = dynamic_cast<QtButtplug::ServerInfo*>(pMsg);
     m_sServerName = pMsgInfo->ServerName;
-    m_iMaxPingTime = std::max(c_iMinPingTimeMs, pMsgInfo->MaxPingTime);
+    m_iMaxPingTime = pMsgInfo->MaxPingTime;
 
     m_wsThread.setObjectName("ButtplugWebsocketThread: " + m_sServerName);
 
@@ -388,8 +403,12 @@ void QButtplugClientPrivate::q_handle_handshake_response(QtButtplug::MessageBase
 
     qDebug() << tr("Connected to buttplug server: ") + m_sServerName;
 
-    m_pingTimer.setSingleShot(false);
-    m_pingTimer.start(m_iMaxPingTime / 2);
+    // Has server ping timer been started? If so instanciate a client ping timer with half
+    // the time to be safe
+    if (0 < m_iMaxPingTime) {
+      m_pingTimer.setSingleShot(false);
+      m_pingTimer.start(m_iMaxPingTime / 2);
+    }
 
     // can't modify local message queue while working it so queue the device querry instead
     qt_callInThread(this->thread(), [this]() {

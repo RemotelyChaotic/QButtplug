@@ -27,7 +27,7 @@ public:
   QList<QtButtplug::MessageBase*> Deserialize(const QString& sMsg);
 
 private:
-  QtButtplug::ButtplugProtocolVersion m_v;
+  QtButtplug::ButtplugProtocolVersion m_v = QtButtplug::ProtocolV3;
 };
 
 QT_END_NAMESPACE

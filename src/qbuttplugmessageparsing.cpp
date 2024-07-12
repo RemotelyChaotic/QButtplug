@@ -67,10 +67,12 @@ namespace detail
       if (itDev != devObj.end() && itDev->isObject())
       {
         auto msgs = itDev->toObject();
-        for (auto itmsg = msgs.begin(); msgs.end() != itmsg; ++itmsg) {
+        for (const QString& sKey : msgs.keys())
+        {
+          auto itmsg = msgs.find(sKey);
           if (itmsg->isObject()) {
             QtButtplug::ClientDeviceMessageAttribute attr;
-            attr.MessageType = itmsg.key();
+            attr.MessageType = sKey;
             auto itAttrS = itmsg->toObject().find("StepCount");
             auto itAttrF = itmsg->toObject().find("FeatureCount");
             if (itmsg->toObject().end() != itAttrF) {
@@ -95,32 +97,34 @@ namespace detail
       if (itDev != devObj.end() && itDev->isObject())
       {
         auto msgs = itDev->toObject();
-        for (auto itmsg = msgs.begin(); msgs.end() != itmsg; ++itmsg) {
-          if (itmsg->isObject()) {
+        for (const QString& sKey : msgs.keys())
+        {
+          auto itmsg = msgs.find(sKey);
+          if (itmsg->isObject() || itmsg->isArray()) {
             QtButtplug::ClientDeviceMessageAttribute attr;
-            attr.MessageType = itmsg.key();
+            attr.MessageType = sKey;
 
             auto fnParseAttrs =  [&attr](QJsonObject o) -> QtButtplug::ClientDeviceMessageAttribute {
               auto ret = QtButtplug::ClientDeviceMessageAttribute(attr);
               auto itAttr = o.find("FeatureDescriptor");
               if (o.end() != itAttr)
               {
-                attr.FeatureDescriptor = itAttr->toString();
+                ret.FeatureDescriptor = itAttr->toString();
               }
               itAttr = o.find("StepCount");
               if (o.end() != itAttr)
               {
-                attr.StepCount = itAttr->toInt();
+                ret.StepCount = itAttr->toInt();
               }
               itAttr = o.find("ActuatorType");
               if (o.end() != itAttr)
               {
-                attr.ActuatorType = itAttr->toString();
+                ret.ActuatorType = itAttr->toString();
               }
               itAttr = o.find("SensorType");
               if (o.end() != itAttr)
               {
-                attr.SensorType = itAttr->toString();
+                ret.SensorType = itAttr->toString();
               }
               itAttr = o.find("SensorRange");
               if (o.end() != itAttr && itAttr->isArray())
@@ -132,7 +136,7 @@ namespace detail
                     if (itSensorRangeElem.count() == 2) {
                       QPair<qint32, qint32> minMax = { itSensorRangeElem.at(0).toInt(),
                                                        itSensorRangeElem.at(1).toInt()};
-                      attr.SensorRange.push_back(minMax);
+                      ret.SensorRange.push_back(minMax);
                     }
                   }
                 }
@@ -143,7 +147,7 @@ namespace detail
                 auto attrArr = itAttr->toArray();
                 for (auto itAtrArr = attrArr.begin(); attrArr.end() != itAtrArr; ++itAtrArr) {
                   if (itAtrArr->isString()) {
-                    attr.Endpoints << itAtrArr->toString();
+                    ret.Endpoints << itAtrArr->toString();
                   }
                 }
               }
@@ -292,7 +296,12 @@ namespace detail
               auto root = sIn.find(QtButtplug::MessageTypeError);
               if (sIn.end() != root || !root->isObject()) {
                 auto objElem = root->toObject();
-                auto it = objElem.find("ErrorMessage");
+                auto it = objElem.find("Id");
+                if (it != objElem.end())
+                {
+                  ret->Id = it->toInt();
+                }
+                it = objElem.find("ErrorMessage");
                 if (it != objElem.end())
                 {
                   ret->ErrorMessage = it->toString();
@@ -1980,8 +1989,9 @@ QList<QtButtplug::MessageBase*> QButtplugMessageSerializer::Deserialize(const QS
         continue;
       }
 
-      auto itMap = detail::staticRegistry.m_map.find(vsKeys[0]);
-      if (detail::staticRegistry.m_map.end() == itMap) {
+      auto& map = detail::staticRegistry.m_map;
+      auto itMap = map.find(vsKeys[0]);
+      if (map.end() == itMap) {
         qWarning() << "Unknown buttplug message type.";
       }
 

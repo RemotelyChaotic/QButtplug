@@ -13,7 +13,7 @@
 namespace QtButtplug
 {
   // message types
-  [[maybe_unused]] const char* const MessageTypeOk = "OK";
+  [[maybe_unused]] const char* const MessageTypeOk = "Ok";
   [[maybe_unused]] const char* const MessageTypeError = "Error";
   [[maybe_unused]] const char* const MessageTypePing = "Ping";
   [[maybe_unused]] const char* const MessageTypeRequestServerInfo = "RequestServerInfo";

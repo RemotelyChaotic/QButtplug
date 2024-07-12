@@ -175,7 +175,7 @@ bool QButtplugClient::waitConnected(qint64 iTimeoutMs)
 bool QButtplugClient::waitDisconnected(qint64 iTimeoutMs)
 {
   Q_D(QButtplugClient);
-  return d->waitConnected(iTimeoutMs);
+  return d->waitDisconnected(iTimeoutMs);
 }
 
 //----------------------------------------------------------------------------------------

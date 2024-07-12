@@ -3,6 +3,7 @@
 
 #include "qobjectdefs.h"
 
+#include <QMetaType>
 #include <QtGlobal>
 
 QT_BEGIN_NAMESPACE
@@ -40,6 +41,9 @@ namespace QtButtplug
     ERROR_NOT_SUPPORTED // Feature is not supported by the current server or client.
   };
 }
+
+Q_DECLARE_METATYPE(QtButtplug::ConnectionState);
+Q_DECLARE_METATYPE(QtButtplug::Error);
 
 QT_END_NAMESPACE
 
