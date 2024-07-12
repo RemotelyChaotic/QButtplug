@@ -211,7 +211,7 @@ QList<int> QButtplugClientDevicePrivate::readSensor(quint32 sensorIndex, QtButtp
   }
 
   auto it = m_messages.find(QtButtplug::V3::DeviceMessageTypeSensorRead);
-  if (m_messages.end() != it) {
+  if (m_messages.end() == it) {
     q_setErr(QtButtplug::ERROR_NOT_SUPPORTED, QString());
     if (nullptr != pErr) *pErr = QtButtplug::ERROR_NOT_SUPPORTED;
     return {};
@@ -383,7 +383,7 @@ QtButtplug::Error QButtplugClientDevicePrivate::sendLinearCmd(qint64 iDurationMs
       return QtButtplug::ERROR_NOT_SUPPORTED;
   }
 
-  if (m_messages.end() != it) {
+  if (m_messages.end() == it) {
     q_setErr(QtButtplug::ERROR_NOT_SUPPORTED, QString());
     return QtButtplug::ERROR_NOT_SUPPORTED;
   }
@@ -458,7 +458,7 @@ QtButtplug::Error QButtplugClientDevicePrivate::sendRotateCmd(bool bClockwise, d
       return QtButtplug::ERROR_NOT_SUPPORTED;
   }
 
-  if (m_messages.end() != it) {
+  if (m_messages.end() == it) {
     q_setErr(QtButtplug::ERROR_NOT_SUPPORTED, QString());
     return QtButtplug::ERROR_NOT_SUPPORTED;
   }
@@ -661,7 +661,7 @@ QtButtplug::Error QButtplugClientDevicePrivate::sendSensorSubscribeCmd(qint32 se
   }
 
   auto it = m_messages.find(QtButtplug::V3::DeviceMessageTypeSensorSubscribe);
-  if (m_messages.end() != it) {
+  if (m_messages.end() == it) {
     q_setErr(QtButtplug::ERROR_NOT_SUPPORTED, QString());
     return QtButtplug::ERROR_NOT_SUPPORTED;
   }
@@ -711,7 +711,7 @@ QtButtplug::Error QButtplugClientDevicePrivate::sendSensorUnsubscribeCmd(qint32 
   }
 
   auto it = m_messages.find(QtButtplug::V3::DeviceMessageTypeSensorSubscribe);
-  if (m_messages.end() != it) {
+  if (m_messages.end() == it) {
     q_setErr(QtButtplug::ERROR_NOT_SUPPORTED, QString());
     return QtButtplug::ERROR_NOT_SUPPORTED;
   }
@@ -878,7 +878,7 @@ QtButtplug::Error QButtplugClientDevicePrivate::q_sendScalarCmd(double dValue, q
   QMap<QString, QList<QtButtplug::ClientDeviceMessageAttribute>>::Iterator it =
       m_messages.find(QtButtplug::V3::DeviceMessageTypeScalar);
 
-  if (m_messages.end() != it) {
+  if (m_messages.end() == it) {
     q_setErr(QtButtplug::ERROR_NOT_SUPPORTED, QString());
     return QtButtplug::ERROR_NOT_SUPPORTED;
   }
@@ -946,7 +946,7 @@ QtButtplug::Error QButtplugClientDevicePrivate::q_sendVibrateCmd(double dValue, 
       QMap<QString, QList<QtButtplug::ClientDeviceMessageAttribute>>::Iterator it =
           m_messages.find(QtButtplug::V1::DeviceMessageTypeVibrate);
 
-      if (m_messages.end() != it) {
+      if (m_messages.end() == it) {
         q_setErr(QtButtplug::ERROR_NOT_SUPPORTED, QString());
         return QtButtplug::ERROR_NOT_SUPPORTED;
       }
@@ -977,7 +977,7 @@ QtButtplug::Error QButtplugClientDevicePrivate::q_sendVibrateCmd(double dValue, 
       QMap<QString, QList<QtButtplug::ClientDeviceMessageAttribute>>::Iterator it =
           m_messages.find(QtButtplug::V2::DeviceMessageTypeVibrate);
 
-      if (m_messages.end() != it) {
+      if (m_messages.end() == it) {
         q_setErr(QtButtplug::ERROR_NOT_SUPPORTED, QString());
         return QtButtplug::ERROR_NOT_SUPPORTED;
       }
