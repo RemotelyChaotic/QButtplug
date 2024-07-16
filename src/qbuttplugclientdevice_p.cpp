@@ -360,7 +360,7 @@ QtButtplug::Error QButtplugClientDevicePrivate::sendScalarCmd(double dValue, qin
 //
 QtButtplug::Error QButtplugClientDevicePrivate::sendLinearCmd(qint64 iDurationMs, double dPosition, qint32 accuatorIndex)
 {
-  if (QtButtplug::ProtocolV0 != m_pParent->m_iMsgVersionUsed)
+  if (QtButtplug::ProtocolV0 == m_pParent->m_iMsgVersionUsed)
   {
     q_setErr(QtButtplug::ERROR_NOT_SUPPORTED, QString());
     return QtButtplug::ERROR_NOT_SUPPORTED;
@@ -435,7 +435,7 @@ QtButtplug::Error QButtplugClientDevicePrivate::sendLinearCmd(qint64 iDurationMs
 //
 QtButtplug::Error QButtplugClientDevicePrivate::sendRotateCmd(bool bClockwise, double dSpeed, qint32 accuatorIndex)
 {
-  if (QtButtplug::ProtocolV0 != m_pParent->m_iMsgVersionUsed)
+  if (QtButtplug::ProtocolV0 == m_pParent->m_iMsgVersionUsed)
   {
     q_setErr(QtButtplug::ERROR_NOT_SUPPORTED, QString());
     return QtButtplug::ERROR_NOT_SUPPORTED;
