@@ -398,12 +398,12 @@ QtButtplug::Error QButtplugClientDevicePrivate::sendLinearCmd(qint64 iDurationMs
   pCmd->DeviceIndex = m_iId;
   if (accuatorIndex >= 0) {
     pCmd->Vectors = {
-      QtButtplug::LinearCmdElem{accuatorIndex, iDurationMs, dPosition}
+      QtButtplug::LinearCmdElem{accuatorIndex, iDurationMs, std::min(1.0, std::max(0.0, dPosition))}
     };
   } else {
     QList<QtButtplug::LinearCmdElem> vElems;
     for (qint32 i = 0; it->size() > i; ++i) {
-      vElems << QtButtplug::LinearCmdElem{i, iDurationMs, dPosition};
+      vElems << QtButtplug::LinearCmdElem{i, iDurationMs, std::min(1.0, std::max(0.0, dPosition))};
     }
     pCmd->Vectors = vElems;
   }
@@ -473,12 +473,12 @@ QtButtplug::Error QButtplugClientDevicePrivate::sendRotateCmd(bool bClockwise, d
   pCmd->DeviceIndex = m_iId;
   if (accuatorIndex >= 0) {
     pCmd->Rotations = {
-        QtButtplug::RotateCmdElem{accuatorIndex, dSpeed, bClockwise}
+        QtButtplug::RotateCmdElem{accuatorIndex, std::min(1.0, std::max(0.0, dSpeed)), bClockwise}
     };
   } else {
     QList<QtButtplug::RotateCmdElem> vElems;
     for (qint32 i = 0; it->size() > i; ++i) {
-      vElems << QtButtplug::RotateCmdElem{i, dSpeed, bClockwise};
+      vElems << QtButtplug::RotateCmdElem{i, std::min(1.0, std::max(0.0, dSpeed)), bClockwise};
     }
     pCmd->Rotations = vElems;
   }
@@ -893,12 +893,12 @@ QtButtplug::Error QButtplugClientDevicePrivate::q_sendScalarCmd(double dValue, q
   pCmd->DeviceIndex = m_iId;
   if (accuatorIndex >= 0) {
     pCmd->Scalars = {
-        QtButtplug::ScalarCmdElem{accuatorIndex, dValue, it->at(accuatorIndex).ActuatorType}
+        QtButtplug::ScalarCmdElem{accuatorIndex, std::min(1.0, std::max(0.0, dValue)), it->at(accuatorIndex).ActuatorType}
     };
   } else {
     QList<QtButtplug::ScalarCmdElem> vElems;
     for (qint32 i = 0; it->size() > i; ++i) {
-      vElems << QtButtplug::ScalarCmdElem{i, dValue, it->at(i).ActuatorType};
+      vElems << QtButtplug::ScalarCmdElem{i, std::min(1.0, std::max(0.0, dValue)), it->at(i).ActuatorType};
     }
     pCmd->Scalars = vElems;
   }
@@ -938,7 +938,7 @@ QtButtplug::Error QButtplugClientDevicePrivate::q_sendVibrateCmd(double dValue, 
       QtButtplug::SingleMotorVibrateCmd* pCmd = new QtButtplug::SingleMotorVibrateCmd;
       pCmd->Id = m_pParent->getNextId();
       pCmd->DeviceIndex = m_iId;
-      pCmd->Speed = dValue;
+      pCmd->Speed = std::min(1.0, std::max(0.0, dValue));
       pMsg = pCmd;
     } break;
     case QtButtplug::ProtocolV1:
