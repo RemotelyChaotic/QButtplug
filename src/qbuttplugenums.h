@@ -42,8 +42,8 @@ namespace QtButtplug
   };
 }
 
-Q_DECLARE_METATYPE(QtButtplug::ConnectionState);
-Q_DECLARE_METATYPE(QtButtplug::Error);
+Q_DECLARE_METATYPE(QtButtplug::ConnectionState)
+Q_DECLARE_METATYPE(QtButtplug::Error)
 
 QT_END_NAMESPACE
 

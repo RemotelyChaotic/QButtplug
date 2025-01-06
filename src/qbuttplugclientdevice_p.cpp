@@ -217,7 +217,7 @@ QList<int> QButtplugClientDevicePrivate::readSensor(quint32 sensorIndex, QtButtp
     return {};
   }
 
-  if (it.value().size() <= static_cast<qint32>(sensorIndex) || 0 > sensorIndex) {
+  if (it.value().size() <= static_cast<qint32>(sensorIndex)) {
     q_setErr(QtButtplug::ERROR_NOT_SUPPORTED, QString());
     if (nullptr != pErr) *pErr = QtButtplug::ERROR_NOT_SUPPORTED;
     return {};
