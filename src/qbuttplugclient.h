@@ -63,7 +63,7 @@ signals:
   void deviceAdded(quint32 iId, QButtplugClientDevice device);
   void deviceRemoved(quint32 iId);
   void scanningFinished();
-  void errorRecieved(QtButtplug::Error error);
+  void errorReceived(QtButtplug::Error error);
 
 private:
   Q_DECLARE_PRIVATE(QButtplugClient)

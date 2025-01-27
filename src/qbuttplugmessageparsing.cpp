@@ -1978,14 +1978,14 @@ QList<QtButtplug::MessageBase*> QButtplugMessageSerializer::Deserialize(const QS
     for (qint32 i = 0; arr.count() > i; ++i) {
       auto it = arr.at(i);
       if (!it.isObject()) {
-        qWarning() << "QButtplugMessageSerializer: Recieved JSON element is not an object.";
+        qWarning() << "QButtplugMessageSerializer: Received JSON element is not an object.";
         continue;
       }
 
       auto obj = it.toObject();
       QStringList vsKeys = obj.keys();
       if (vsKeys.empty()) {
-        qWarning() << "QButtplugMessageSerializer: No keys found in recieved JSON object.";
+        qWarning() << "QButtplugMessageSerializer: No keys found in received JSON object.";
         continue;
       }
 
@@ -2000,7 +2000,7 @@ QList<QtButtplug::MessageBase*> QButtplugMessageSerializer::Deserialize(const QS
     return ret;
   }
 
-  qWarning() << "QButtplugMessageSerializer: Recieved JSON is malformed.";
+  qWarning() << "QButtplugMessageSerializer: Received JSON is malformed.";
   return {};
 }
 

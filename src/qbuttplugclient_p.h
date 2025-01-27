@@ -194,7 +194,7 @@ signals:
   void deviceAdded(quint32 iId, QButtplugClientDevice device);
   void deviceRemoved(quint32 iId);
   void scanningFinished();
-  void errorRecieved(QtButtplug::Error error);
+  void errorReceived(QtButtplug::Error error);
 
   void q_await_response();
 
@@ -206,7 +206,7 @@ protected slots:
   // connected with Qt::DirectConnection to socket in socket thread
   void startHandshake();
   // connected with Qt::DirectConnection to socket in socket thread
-  void textMessageRecieved(const QString& sMessage);
+  void textMessageReceived(const QString& sMessage);
 
 protected:
   bool send(QtButtplug::MessageBase* pMsg, QStringList vsExpectedResponses,

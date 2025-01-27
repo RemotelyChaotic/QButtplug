@@ -110,8 +110,8 @@ protected:
   QButtplugClientDevice(QButtplugClientPrivate* pParent, const QtButtplug::Device* const pMsg);
 
   void reset();
-  void sensorReadingRecieved(QtButtplug::SensorReading* pMsg);
-  void rawReadingRecieved(QtButtplug::RawReading* pMsg);
+  void sensorReadingReceived(QtButtplug::SensorReading* pMsg);
+  void rawReadingReceived(QtButtplug::RawReading* pMsg);
 
 private:
   QButtplugClientDevicePrivate* d_func();

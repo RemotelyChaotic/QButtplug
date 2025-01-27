@@ -11,7 +11,7 @@ QButtplugClient::QButtplugClient(QObject* pParent) :
   QObject::connect(d_ptr, &QButtplugClientPrivate::deviceAdded, this, &QButtplugClient::deviceAdded);
   QObject::connect(d_ptr, &QButtplugClientPrivate::deviceRemoved, this, &QButtplugClient::deviceRemoved);
   QObject::connect(d_ptr, &QButtplugClientPrivate::scanningFinished, this, &QButtplugClient::scanningFinished);
-  QObject::connect(d_ptr, &QButtplugClientPrivate::errorRecieved, this, &QButtplugClient::errorRecieved);
+  QObject::connect(d_ptr, &QButtplugClientPrivate::errorReceived, this, &QButtplugClient::errorReceived);
 }
 QButtplugClient::~QButtplugClient()
 {

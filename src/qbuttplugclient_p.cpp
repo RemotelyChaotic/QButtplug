@@ -42,7 +42,7 @@ QButtplugClientPrivate::QButtplugClientPrivate(QButtplugClient* const q) :
                      this, &QButtplugClientPrivate::startHandshake, Qt::DirectConnection);
     QObject::connect(m_pWs, &QWebSocket::disconnected, this, &QButtplugClientPrivate::onDisconnect);
     QObject::connect(m_pWs, &QWebSocket::textMessageReceived,
-                     this, &QButtplugClientPrivate::textMessageRecieved, Qt::QueuedConnection);
+                     this, &QButtplugClientPrivate::textMessageReceived, Qt::QueuedConnection);
     QObject::connect(m_pWs, qOverload<QAbstractSocket::SocketError>(&QWebSocket::error),
                      this, &QButtplugClientPrivate::socketError, Qt::DirectConnection);
 
@@ -274,7 +274,7 @@ void QButtplugClientPrivate::startHandshake()
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClientPrivate::textMessageRecieved(const QString& sMessage)
+void QButtplugClientPrivate::textMessageReceived(const QString& sMessage)
 {
   QList<QtButtplug::MessageBase*> vpMsgs = m_pMsgSerializer->Deserialize(sMessage);
   for (QtButtplug::MessageBase* pMsg : qAsConst(vpMsgs)) {
@@ -474,7 +474,7 @@ void QButtplugClientPrivate::q_handle_sensor_reading(QtButtplug::MessageBase* pM
   auto pMsgRead = dynamic_cast<QtButtplug::SensorReading*>(pMsg);
   auto it = m_devices.find(pMsgRead->DeviceIndex);
   if (m_devices.end() != it) {
-    it->sensorReadingRecieved(pMsgRead);
+    it->sensorReadingReceived(pMsgRead);
   }
 }
 
@@ -485,7 +485,7 @@ void QButtplugClientPrivate::q_handle_raw_reading(QtButtplug::MessageBase* pMsg)
   auto pMsgRead = dynamic_cast<QtButtplug::RawReading*>(pMsg);
   auto it = m_devices.find(pMsgRead->DeviceIndex);
   if (m_devices.end() != it) {
-    it->rawReadingRecieved(pMsgRead);
+    it->rawReadingReceived(pMsgRead);
   }
 }
 
@@ -507,7 +507,7 @@ void QButtplugClientPrivate::q_setErr(QtButtplug::Error err, const QString& sErr
   QMutexLocker l(&m_errMut);
   m_error = err;
   m_errorDetailString = sErr;
-  emit errorRecieved(err);
+  emit errorReceived(err);
 }
 
 //----------------------------------------------------------------------------------------

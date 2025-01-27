@@ -412,7 +412,7 @@ void QButtplugClientDevice::reset()
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClientDevice::sensorReadingRecieved(QtButtplug::SensorReading* pMsg)
+void QButtplugClientDevice::sensorReadingReceived(QtButtplug::SensorReading* pMsg)
 {
   if (!isValid())
     return;
@@ -425,7 +425,7 @@ void QButtplugClientDevice::sensorReadingRecieved(QtButtplug::SensorReading* pMs
 
 //----------------------------------------------------------------------------------------
 //
-void QButtplugClientDevice::rawReadingRecieved(QtButtplug::RawReading* pMsg)
+void QButtplugClientDevice::rawReadingReceived(QtButtplug::RawReading* pMsg)
 {
   if (!isValid())
     return;
